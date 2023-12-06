@@ -29,6 +29,7 @@ count_fitness = 0
 
 
 def gerar_populacao():
+    print("\n---------------------------\n..::Gerar população::..")
     global tamanho_populacao, populacao
     
     for _ in range(tamanho_populacao):
@@ -53,6 +54,7 @@ def check_position(position: str):
     return real_position
         
 def fitness(solucao: Solucao):
+    print("\n---------------------------\n..::Fitness:..")
     global count_fitness
     count_fitness += 1
     choques = 0
@@ -69,7 +71,8 @@ def fitness(solucao: Solucao):
     
     return choques // 2
     
-def fitness_populacao(population: Populacao):
+def fitness_grupo(population: Populacao):
+    print("\n---------------------------\n..::fitness_grupo()::..")
     # Gera o fitness de cada indivíduo da populacao
     fitnesses_grupo = []
     for solucao in population:
@@ -81,6 +84,7 @@ def fitness_populacao(population: Populacao):
     return fitnesses_grupo
 
 def selecao_pais():
+    print("\n---------------------------\n..::Seleção de pais::..")
     global populacao, fitnesses
     pai1, pai2, roleta = [], [], []
     
@@ -96,6 +100,7 @@ def selecao_pais():
     return pai1, pai2
 
 def roleta(roleta: List[List[str]]):
+    print("\n---------------------------\n..::Roleta::..")
     fitnesses_roleta = sorted(fitness_populacao(roleta), reverse=True)
     return fitnesses_roleta[0], fitnesses_roleta[1]
 
@@ -103,7 +108,7 @@ def mutacao(individuo: Solucao):
     fst_gen = random.randint(0, len(individuo) - 1)
     snd_gen = 0
     done = False
-    print(":Mutação:")
+    print("\n---------------------------\n..::Mutação::..")
     print(f"Solução original:\n - {individuo}\n\n")
     while not done:
         snd_gen = random.randint(0, len(individuo) - 1)
@@ -115,26 +120,71 @@ def mutacao(individuo: Solucao):
     individuo[fst_gen] = aux
     print(". .. ... mutação em andamento ... .. .")
     print(f"Solução mutante:\n - {individuo}\n\n")
+
+def crossfill(pai1: Solucao, pai2: Solucao, start: int, step: int, step2: int = 0):
+    filho = []
+    #steps1 = [0, step2]
+    #steps2 = [start, step]
+    print(f"Start: {start} / Step: {step} / Step2: {step2}")
+    step_pai2 = 0
+    for i in range(len(pai1)):
+        if i not in range(start, start + step) and i not in range(0, step2):
+            print("(pai2)Indicie crossfill: ", i)
+            if pai2[i] is in filho:
+                filho.append(pai2[i])
+        else:
+            print("(pai1)Indicie crossfill: ", i)
+            filho.append(pai1[i])
+            
+        step_pai2 += 1
     
+    return filho    
+
 def crossover(pai1: Solucao, pai2: Solucao):
+    print("\n---------------------------\n..::Crossover::..")
     # Cria janela de tamanho 3, 4 ou 5
-    filho1, filho2 = [], []
+    filhos = [Solucao, Solucao]
     step = random.randint(3, 5)
     start = random.randint(0, len(pai1) - 1)
     print("Start: ", start)
     print("Step: ", step)
     if start + step > len(pai1) - 1:
         print("maior")
-        
+        step2 = (step - (len(pai1) - start))
+        step = len(pai1) - start
+        for i in range(1):
+            filhos[i] = crossfill(pai1, pai2, start, step, step2)
     else:
         print("menor ou igual")
+        for i in range(1):
+            filhos[i] = crossfill(pai1, pai2, start, step)
     
     #print("Janela: ", window)
     
-    return [filho1, filho2]
+    print(f"Pai 1: {pai1}\nPai 2: {pai2}")
+    print(f" = Filho 1: {filhos[0]}\n = Filho 2: {filhos[1]}")
+    return filhos
+
+def selecao_sobreviventes(filhos: [Solucao, Solucao]):
+    print("\n---------------------------\n..::Seleção de sobreviventes::..")
+    global populacao
+    fitnesses_filhos = fitness_grupo(filhos)
+    print("Fitnesses dos filhos: ", fitnesses_filhos)
+    populacao_aux = sorted(populacao + filhos, key=fitness)
+    populacao_aux = populacao_aux[len(populacao)-1:]
     
+    
+    print("Ok!") if len(populacao) == len(populacao_aux) else print("Fail!")
+    
+    return
+
 def algoritmo_evolutivo():
     global populacao, fitnesses, geracoes
+    
+    gerar_populacao()
+    fitness_grupo(populacao)
+    
+    print("Fitnesses da população: ", fitnesses)
     
     for geracao in range(geracoes):
         # Seleção dos pais
@@ -150,14 +200,16 @@ def algoritmo_evolutivo():
             filhos[0] = pai1
             filhos[1] = pai2
             
-            # Mutação (prob. = 40%) - troca de genes
+        # Mutação (prob. = 40%) - troca de genes
         mutacoes = 0
         while mutacoes < len(filhos):
             prob = random.random(0,1)
             if prob < prob_mutacao:
                 mutacao()
             
-            # Seleção de sobreviventes (substitui os filhos pelos piores da populacao)
+        # Seleção de sobreviventes (substitui os filhos pelos piores da populacao)
+            
+        
         """
         Condição de término:
            *encontrar a solução
