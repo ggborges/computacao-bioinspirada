@@ -23,14 +23,16 @@ geracoes = 100
 prob_recombinacao = 0.9
 prob_mutacao = 0.4
 posicoes = ["000", "001", "010", "011", "100", "101", "110", "111"]
-populacao = []
+populacao = Populacao
+populacao_ordenada = Populacao
 fitnesses = []
+fitnesses_ordenado = []
 count_fitness = 0
 
 
 def gerar_populacao():
     print("\n---------------------------\n..::Gerar população::..")
-    global tamanho_populacao, populacao
+    global tamanho_populacao, populacao, fitnesses, fitnesses_ordenado, populacao_ordenada
     
     for _ in range(tamanho_populacao):
         visitados, solucao = [], []
@@ -43,8 +45,12 @@ def gerar_populacao():
                     visitados.append(posicoes[rand_index])
                     done = True                    
         populacao.append(solucao)
-        
-    #print(populacao)
+    
+    fitnesses = fitness_grupo(populacao)
+    pares = list(zip(fitnesses, populacao))
+    pares_ordenados = sorted(pares, key=lambda x: x[0])
+    fitnesses_ordenado = [par[0] for par in pares_ordenados]
+    populacao_ordenada = [par[1] for par in pares_ordenados]
 
 def check_position(position: str):
     real_position = 0
@@ -151,19 +157,41 @@ def crossover(pai1: Solucao, pai2: Solucao):
 
 def selecao_sobreviventes(filhos: [Solucao, Solucao]):
     print("\n---------------------------\n..::Seleção de sobreviventes::..")
-    global populacao
+    global populacao, fitnesses, populacao_ordenada, fitnesses_ordenado
     fitnesses_filhos = fitness_grupo(filhos)
+    # Verifica se algum novo inidividuo possui fitness alvo (fitness = 0)
+    filhos_0 = []
+    for i, fitness in enumerate(fitnesses_filhos):
+        if fitness == 0:
+            filhos_0.append(filhos[i])
+    if len(filhos_0) > 0:
+        return len(filhos_0), filhos_0
+    #
+    fitnesses_aux = fitnesses + fitnesses_filhos
     print("Fitnesses dos filhos: ", fitnesses_filhos)
-    populacao_aux = sorted(populacao + filhos, key=fitness)
-    populacao_aux = populacao_aux[len(populacao)-1:]
+    populacao_aux = populacao + filhos
+    pares = list(zip(fitnesses_aux, populacao_aux))
+    pares_ordenados = sorted(pares, key=lambda x: x[0])
     
+    fitnesses_aux = [par[0] for par in pares_ordenados]
+    populacao_aux = [par[1] for par in pares_ordenados]
+    
+    populacao_ordenada = populacao_aux[:len(populacao)-1]
+    fitnesses_ordenado = fitnesses_aux[:len(fitnesses)-1]
+        
+    populacao = [par[1] for par in pares if par[1] in populacao_ordenada]
+    fitnesses = [par[0] for par in pares if par[1] in populacao_ordenada]
     
     print("Ok!") if len(populacao) == len(populacao_aux) else print("Fail!")
+    print("População: ", populacao)
+    print("Fitnesses: ", fitnesses)
+    print("População ordenada: ", populacao_ordenada)
+    print("Fitnesses ordenado: ", fitnesses_ordenado)
     
-    return
+    return 0, ["Seleção de sobrevivente efetuada sem solução encontrada"]
 
 def algoritmo_evolutivo():
-    global populacao, fitnesses, geracoes
+    global populacao, fitnesses, geracoes, count_fitness
     
     gerar_populacao()
     fitness_grupo(populacao)
@@ -181,8 +209,8 @@ def algoritmo_evolutivo():
             filhos = crossover(pai1, pai2)
         else:
             print(f"Repetiu os pais.\nProbabilidade de crossover = {prob_recombinacao}\nProbabilidade ocorrida: {prob}")
-            filhos[0] = pai1
-            filhos[1] = pai2
+            filhos.append(pai1)
+            filhos.append(pai2)
             
         # Mutação (prob. = 40%) - troca de genes
         mutacoes = 0
@@ -192,13 +220,24 @@ def algoritmo_evolutivo():
                 mutacao()
             
         # Seleção de sobreviventes (substitui os filhos pelos piores da populacao)
-            
+            # Verifica se foi encontrado uma solução com fitness 0
+        encontrou_solucao, solucoes_perfeitas = selecao_sobreviventes(filhos)
+        if encontrou_solucao > 0: 
+            print(f"Encontrou fitness 0! {encontrou_solucao} individuo(s).")
+            return filhos, geracao
         
         """
         Condição de término:
            *encontrar a solução
            *10.000 avaliações de Fitness
         """
+        if count_fitness >= 10.000:
+            print("Mais de 10.000 avaliações de fitness.")
+            melhor_solucao = populacao_ordenada[0]
+            return melhor_solucao, , geracao
+        
+    melhor_solucao = populacao_ordenada[0]
+    melhor_fitness = fitnesses_ordenado[0]
             
 # ------------------------------------------------------------------------------ #
 

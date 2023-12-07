@@ -9,7 +9,7 @@ class AlgoritmoGenetico:
         for i in range(len(pai1)):
             if i not in range(start, start + step) and i not in range(0, step2):
                 print("(pai2)Indicie crossfill: ", i)
-                if pai2[i] is in filho:
+                if pai2[i] in filho:
                     filho.append(pai2[i])
             else:
                 print("(pai1)Indicie crossfill: ", i)
