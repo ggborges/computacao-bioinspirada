@@ -121,48 +121,32 @@ def mutacao(individuo: Solucao):
     print(". .. ... mutação em andamento ... .. .")
     print(f"Solução mutante:\n - {individuo}\n\n")
 
-def crossfill(pai1: Solucao, pai2: Solucao, start: int, step: int, step2: int = 0):
-    filho = []
-    #steps1 = [0, step2]
-    #steps2 = [start, step]
-    print(f"Start: {start} / Step: {step} / Step2: {step2}")
-    step_pai2 = 0
-    for i in range(len(pai1)):
-        if i not in range(start, start + step) and i not in range(0, step2):
-            print("(pai2)Indicie crossfill: ", i)
-            if pai2[i] is in filho:
-                filho.append(pai2[i])
-        else:
-            print("(pai1)Indicie crossfill: ", i)
-            filho.append(pai1[i])
-            
-        step_pai2 += 1
+def crossfill(corte_pai, pai: Solucao):
+    filho = Solucao
+    filho = corte_pai
+    #for i in range(len(corte_pai), (len(pai) - len(corte_pai)))
+    i = len(corte_pai)
+    while len(filho) < 8:
+        print("Pai[i]: ", pai[i])
+        print("Filho: ", filho)
+        if pai[i] not in filho: filho.append(pai[i])
+        if i < 7: i += 1
+        else: i = 0
     
-    return filho    
+    print("Filho: ", filho)
+    return filho
 
 def crossover(pai1: Solucao, pai2: Solucao):
-    print("\n---------------------------\n..::Crossover::..")
-    # Cria janela de tamanho 3, 4 ou 5
     filhos = [Solucao, Solucao]
-    step = random.randint(3, 5)
-    start = random.randint(0, len(pai1) - 1)
-    print("Start: ", start)
-    print("Step: ", step)
-    if start + step > len(pai1) - 1:
-        print("maior")
-        step2 = (step - (len(pai1) - start))
-        step = len(pai1) - start
-        for i in range(1):
-            filhos[i] = crossfill(pai1, pai2, start, step, step2)
-    else:
-        print("menor ou igual")
-        for i in range(1):
-            filhos[i] = crossfill(pai1, pai2, start, step)
+    ponto_corte = random.randint(0, len(pai1))
+    corte1 = pai1[:ponto_corte]
+    corte2 = pai2[:ponto_corte]
+    print(f"Pai1: {pai1}\nPai2: {pai2}\nPonto de corte: {ponto_corte}\n")
+    print(f"Corte do pai 1: {corte1}\nCorte do pai 2: {corte2}\n")
+    filho1 = crossfill(corte1, pai2)
+    filho2 = crossfill(corte2, pai1)
+    filhos = [filho1, filho2]
     
-    #print("Janela: ", window)
-    
-    print(f"Pai 1: {pai1}\nPai 2: {pai2}")
-    print(f" = Filho 1: {filhos[0]}\n = Filho 2: {filhos[1]}")
     return filhos
 
 def selecao_sobreviventes(filhos: [Solucao, Solucao]):
